@@ -8,6 +8,7 @@ public class QcommerceParametricEngineApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(QcommerceParametricEngineApplication.class, args);
+		System.out.println("Project is running!!!.");
 	}
 
 }

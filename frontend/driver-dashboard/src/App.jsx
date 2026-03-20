@@ -1,183 +1,120 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  CloudRain, ShieldCheck, Activity, MapPin, Zap, Lock, User, IndianRupee, AlertCircle
-} from 'lucide-react';
+import { CloudRain, ShieldCheck, Activity, MapPin, Zap, Lock, IndianRupee, AlertCircle, RefreshCw } from 'lucide-react';
 
 function App() {
-  const [isTriggered, setIsTriggered] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+  const [policy, setPolicy] = useState({
+    policyId: "PENDING",
+    status: "ACTIVE_MONITORING",
+    currentRainfall: 0,
+    threshold: 5.0,
+    payoutAmount: 0,
+    triggerActive: false
+  });
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const handleTriggerSimulation = async () => {
+  const syncWeatherEngine = async (simulatedRain) => {
     setLoading(true);
     try {
-      // Connecting to your Spring Boot Backend (Eclipse)
-      const response = await fetch('http://localhost:8080/api/v1/triggers/simulate', {
+      const response = await fetch('http://localhost:8080/api/v1/insurance/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ condition: isTriggered ? "NORMAL" : "HEAVY_RAIN" })
+        body: JSON.stringify({ rainfall: simulatedRain })
       });
       const data = await response.json();
-      
-      // Update UI based on Backend response
-      if (data.status === "CLAIM_INITIATED") {
-        setIsTriggered(true);
-      } else {
-        setIsTriggered(false);
-      }
+      setPolicy(data);
     } catch (err) {
-      console.log("Backend not reachable, toggling local state for demo.");
-      setIsTriggered(!isTriggered);
+      console.error("Connection Failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans selection:bg-teal-500/30">
-      {/* Navigation */}
-      <nav className="border-b border-slate-800 bg-[#020617]/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(20,184,166,0.4)]">
-              <Zap className="text-slate-900 fill-current" size={20} />
+    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans p-4 lg:p-8">
+      <div className="max-w-7xl mx-auto border border-slate-800 bg-[#0f172a]/30 rounded-[3rem] overflow-hidden shadow-2xl">
+        <nav className="border-b border-slate-800/50 p-6 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Zap className="text-teal-400 fill-teal-400/20" size={28} />
+            <span className="text-2xl font-black tracking-tighter text-white">QUANTUM<span className="text-teal-500 underline decoration-teal-500/30">QUIRKS</span></span>
+          </div>
+          <div className="flex gap-4">
+            <div className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${policy.triggerActive ? 'bg-rose-500' : 'bg-teal-500'}`} />
+              <span className="text-[10px] font-bold uppercase tracking-widest">{policy.status}</span>
             </div>
-            <span className="text-xl font-bold tracking-tight text-white italic">QUANTUM<span className="text-teal-400">QUIRKS</span></span>
           </div>
-          <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full">
-            <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">System Live</span>
-          </div>
-        </div>
-      </nav>
+        </nav>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-white mb-1">Partner Dashboard</h2>
-            <p className="text-slate-400 flex items-center gap-2 text-sm">
-              <MapPin size={14} className="text-teal-500" /> Hyderabad Sector V • {currentTime}
-            </p>
-          </div>
-          <div className="hidden md:block text-right">
-            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em]">Partner ID</p>
-            <p className="text-sm font-mono text-teal-400">QQ-2026-SATISH</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Coverage Card */}
-              <div className="bg-slate-900/40 border border-slate-800/60 p-6 rounded-[2rem] backdrop-blur-sm relative overflow-hidden transition-all hover:border-teal-500/30 group">
-                <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <ShieldCheck size={140} />
-                </div>
-                <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Active Coverage</h3>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-4xl font-black text-white tracking-tighter">DC 150</span>
-                  <span className="text-teal-500 font-bold">/wk</span>
-                </div>
-                <p className="text-xs text-slate-500">Protection: Loss of Income Only</p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+          <div className="lg:col-span-8 p-8 lg:p-12 border-r border-slate-800/50">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active Policy ID</p>
+                <p className="text-2xl font-mono font-bold text-white">{policy.policyId}</p>
               </div>
-
-              {/* Payout Card */}
-              <div className="bg-slate-900/40 border border-slate-800/60 p-6 rounded-[2rem] backdrop-blur-sm relative overflow-hidden transition-all hover:border-amber-500/30">
-                <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Payout Potential</h3>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-4xl font-black text-amber-400 tracking-tighter italic">DC 1,200</span>
-                </div>
-                <p className="text-xs text-slate-500">Automated Transfer on Disruption</p>
+              <div className="space-y-1 text-right md:text-left">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Hyper-Local Coverage</p>
+                <p className="text-2xl font-bold text-white flex items-center gap-2 justify-end md:justify-start">
+                  <MapPin size={20} className="text-teal-500" /> HYD-SEC-V
+                </p>
               </div>
             </div>
 
-            {/* Chart Area */}
-            <div className="bg-slate-900/40 border border-slate-800/60 p-8 rounded-[2rem] backdrop-blur-sm">
-              <div className="flex justify-between items-center mb-8">
-                <h3 className="text-sm font-bold text-slate-300 flex items-center gap-2">
-                  <Activity size={16} className="text-teal-500" /> Hyper-local Rain Data (mm)
-                </h3>
+            <div className="bg-slate-900/40 border border-slate-800 p-8 rounded-[2rem] mb-8">
+              <div className="flex justify-between items-end mb-8">
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Risk Analysis Engine</h3>
+                <Activity className="text-teal-500 animate-pulse" size={20} />
               </div>
-              <div className="h-40 flex items-end gap-3 px-2">
-                {[35, 65, 40, 85, 55, 95, 20].map((h, i) => (
-                  <div key={i} className="flex-1 bg-slate-800/50 rounded-t-xl hover:bg-teal-500/30 transition-all relative group" style={{height: `${h}%`}}>
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-[10px] px-2 py-1 rounded border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {h}mm
-                    </div>
-                  </div>
+              <div className="flex items-end gap-4 h-32">
+                {[2, 4, 3, 8, 5, policy.currentRainfall * 10, 2].map((val, i) => (
+                  <div key={i} className="flex-1 transition-all duration-700 rounded-t-lg bg-slate-800" 
+                       style={{ height: `${Math.min(val, 100)}%`, backgroundColor: val >= 50 ? '#f43f5e' : '#14b8a633' }} />
                 ))}
               </div>
-              <div className="flex justify-between mt-4 text-[9px] text-slate-600 font-black uppercase tracking-widest">
-                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+              <div className="mt-6 flex justify-between text-[10px] font-black text-slate-600 uppercase">
+                <span>00:00</span><span>04:00</span><span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span><span>23:59</span>
               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-4">
+              <button onClick={() => syncWeatherEngine(1.2)} className="px-8 py-4 bg-slate-800 hover:bg-slate-700 rounded-2xl text-xs font-bold transition-all">NORMAL WEATHER</button>
+              <button onClick={() => syncWeatherEngine(6.8)} className="px-8 py-4 bg-teal-500 text-slate-900 hover:bg-teal-400 rounded-2xl text-xs font-bold shadow-lg shadow-teal-500/20 transition-all">SIMULATE DISRUPTION (6.8mm)</button>
             </div>
           </div>
 
-          {/* AI Engine Sidebar */}
-          <div className="space-y-6">
-            <div className={`p-8 rounded-[2.5rem] border transition-all duration-700 relative overflow-hidden ${isTriggered ? 'bg-rose-950/20 border-rose-500 shadow-[0_0_50px_rgba(244,63,94,0.15)]' : 'bg-slate-900/40 border-slate-800/60'}`}>
-              {isTriggered && (
-                <div className="absolute inset-0 bg-rose-500/5 animate-pulse pointer-events-none"></div>
-              )}
-              
-              <div className="text-center relative z-10">
-                <div className={`inline-flex p-6 rounded-3xl mb-6 transition-all duration-500 ${isTriggered ? 'bg-rose-500 text-white rotate-12 shadow-lg shadow-rose-500/40' : 'bg-slate-800 text-slate-600'}`}>
-                  <CloudRain size={40} className={isTriggered ? 'animate-bounce' : ''} />
+          <div className="lg:col-span-4 bg-slate-900/20 p-8 lg:p-12 space-y-8">
+            <div className="p-8 rounded-[2rem] border border-slate-800 bg-slate-900/40 relative overflow-hidden">
+              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-6 text-center">Wallet Status</h4>
+              <div className="text-center">
+                <div className="inline-flex items-baseline gap-1 text-5xl font-black text-white tracking-tighter mb-2">
+                  <IndianRupee size={28} className="text-teal-500" />
+                  {policy.payoutAmount.toLocaleString()}
                 </div>
-                <h4 className={`text-xl font-black mb-2 tracking-tight ${isTriggered ? 'text-white' : 'text-slate-400'}`}>
-                  {isTriggered ? 'TRIGGER ACTIVE' : 'MONITORING'}
-                </h4>
-                <p className="text-xs text-slate-500 mb-8 leading-relaxed">
-                  {isTriggered 
-                    ? 'Rainfall > 5mm/hr detected at your GPS coordinates. Claim QQ-992 initiated.' 
-                    : 'AI Risk Engine is scanning hyper-local weather sensors for disruptions.'}
-                </p>
-                
-                <button 
-                  onClick={handleTriggerSimulation}
-                  disabled={loading}
-                  className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all active:scale-95 ${isTriggered ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/30 hover:bg-rose-600' : 'bg-teal-500 text-slate-900 shadow-lg shadow-teal-500/20 hover:bg-teal-400'}`}>
-                  {loading ? 'PROCESSING...' : isTriggered ? 'RESET SENSORS' : 'SIMULATE DISRUPTION'}
-                </button>
+                <p className="text-xs text-slate-500">Pending Instant Payout</p>
               </div>
+              {policy.triggerActive && (
+                <div className="mt-8 p-4 bg-teal-500/10 border border-teal-500/30 rounded-2xl flex items-center gap-3">
+                  <ShieldCheck size={20} className="text-teal-500" />
+                  <span className="text-[10px] font-bold text-teal-400">VERIFIED BY AI GUARD</span>
+                </div>
+              )}
             </div>
 
-            {/* AI Fraud Logic Preview */}
-            <div className="bg-slate-900/40 border border-slate-800/60 p-6 rounded-[2rem] backdrop-blur-sm">
-              <div className="flex items-center gap-2 text-slate-500 mb-4">
-                <Lock size={14} className="text-teal-500" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Security Guard</span>
+            <div className={`p-8 rounded-[2rem] border transition-all duration-500 ${policy.triggerActive ? 'bg-rose-500 border-rose-400 shadow-2xl shadow-rose-500/20' : 'bg-slate-800 border-slate-700'}`}>
+              <div className="flex justify-between items-start mb-6">
+                <CloudRain size={32} className={policy.triggerActive ? 'text-white' : 'text-slate-600'} />
+                {loading && <RefreshCw size={16} className="animate-spin text-white" />}
               </div>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-[10px]">
-                  <span className="text-slate-500">GPS SPOOF CHECK</span>
-                  <span className="text-teal-400 font-mono tracking-tighter px-2 py-0.5 bg-teal-500/10 rounded">PASS</span>
-                </div>
-                <div className="flex justify-between items-center text-[10px]">
-                  <span className="text-slate-500">DEVICE VERIFIED</span>
-                  <span className="text-teal-400 font-mono tracking-tighter px-2 py-0.5 bg-teal-500/10 rounded">YES</span>
-                </div>
-              </div>
+              <h5 className={`text-lg font-bold mb-2 ${policy.triggerActive ? 'text-white' : 'text-slate-400'}`}>
+                {policy.triggerActive ? 'DISRUPTION PAYOUT' : 'SAFE ZONE'}
+              </h5>
+              <p className={`text-[11px] leading-relaxed ${policy.triggerActive ? 'text-rose-100' : 'text-slate-500'}`}>
+                {policy.triggerActive ? 'Rainfall threshold exceeded. Claim processed without human intervention.' : 'Monitoring weather sensors. Your income is protected if rainfall exceeds 5mm/hr.'}
+              </p>
             </div>
           </div>
         </div>
-
-        {/* Status Notification */}
-        {isTriggered && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-rose-600 text-white px-8 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-bottom-10">
-            <AlertCircle className="animate-pulse" />
-            <div className="text-left">
-              <p className="text-xs font-black uppercase tracking-widest">System Payout Initiated</p>
-              <p className="text-[10px] opacity-80">DC 1,200 being transferred to your wallet.</p>
-            </div>
-          </div>
-        )}
-      </main>
+      </div>
     </div>
   );
 }
