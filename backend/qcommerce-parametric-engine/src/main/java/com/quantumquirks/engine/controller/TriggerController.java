@@ -15,7 +15,7 @@ public class TriggerController {
         Map<String, Object> response = new HashMap<>();
         Map<String, Double> metrics = new HashMap<>();
         
-        response.put("walletBalance", 12450.00); // Default
+        response.put("walletBalance", 12450.00);
 
         switch (type) {
             case "RAIN":
