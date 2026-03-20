@@ -1,122 +1,137 @@
-import React, { useState, useEffect } from 'react';
-import { CloudRain, ShieldCheck, Activity, MapPin, Zap, Lock, IndianRupee, AlertCircle, RefreshCw } from 'lucide-react';
+import {
+  Activity,
+  AlertTriangle,
+  ArrowUpRight,
+  CloudRain,
+  Cpu, Radio, RefreshCw,
+  Thermometer,
+  Wallet,
+  Wind,
+  Zap
+} from 'lucide-react';
+import { useState } from 'react';
 
 function App() {
-  const [policy, setPolicy] = useState({
-    policyId: "PENDING",
-    status: "ACTIVE_MONITORING",
-    currentRainfall: 0,
-    threshold: 5.0,
-    payoutAmount: 0,
-    triggerActive: false
+  const [riskData, setRiskData] = useState({
+    activePeril: "NONE",
+    payoutStatus: "MONITORING",
+    metrics: { rain: 0.5, temp: 32, aqi: 45 },
+    walletBalance: 12450.00,
+    payoutAmount: 0
   });
-  const [loading, setLoading] = useState(false);
 
-  const syncWeatherEngine = async (simulatedRain) => {
-    setLoading(true);
-    try {
-      const response = await fetch('http://localhost:8080/api/v1/insurance/evaluate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rainfall: simulatedRain })
-      });
-      const data = await response.json();
-      setPolicy(data);
-    } catch (err) {
-      console.error("Connection Failed");
-    } finally {
-      setLoading(false);
-    }
+  const triggerEngine = async (perilType) => {
+    // Simulated Backend Sync
+    const response = await fetch('http://localhost:8080/api/v1/insurance/trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: perilType })
+    });
+    const data = await response.json();
+    setRiskData(data);
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans p-4 lg:p-8">
-      <div className="max-w-7xl mx-auto border border-slate-800 bg-[#0f172a]/30 rounded-[3rem] overflow-hidden shadow-2xl">
-        <nav className="border-b border-slate-800/50 p-6 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Zap className="text-teal-400 fill-teal-400/20" size={28} />
-            <span className="text-2xl font-black tracking-tighter text-white">QUANTUM<span className="text-teal-500 underline decoration-teal-500/30">QUIRKS</span></span>
+    <div className="min-h-screen bg-[#020617] text-slate-300 font-sans selection:bg-cyan-500/30">
+      {/* GLOW BACKGROUND EFFECT */}
+      <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[120px] rounded-full pointer-events-none" />
+
+      <nav className="border-b border-slate-800/50 bg-[#020617]/60 backdrop-blur-xl sticky top-0 z-50 px-8 h-20 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-lg shadow-cyan-500/20">
+            <Zap className="text-white fill-white" size={24} />
           </div>
-          <div className="flex gap-4">
-            <div className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${policy.triggerActive ? 'bg-rose-500' : 'bg-teal-500'}`} />
-              <span className="text-[10px] font-bold uppercase tracking-widest">{policy.status}</span>
-            </div>
+          <h1 className="text-xl font-black tracking-tighter text-white italic">QUANTUM<span className="text-cyan-400">QUIRKS</span>.AI</h1>
+        </div>
+        <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/50 border border-slate-800 rounded-full">
+            <Radio size={14} className="text-cyan-400 animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Node: HYD-01</span>
           </div>
-        </nav>
+          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-700 to-slate-800 border border-slate-700 flex items-center justify-center font-bold text-white text-xs">SK</div>
+        </div>
+      </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-          <div className="lg:col-span-8 p-8 lg:p-12 border-r border-slate-800/50">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active Policy ID</p>
-                <p className="text-2xl font-mono font-bold text-white">{policy.policyId}</p>
-              </div>
-              <div className="space-y-1 text-right md:text-left">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Hyper-Local Coverage</p>
-                <p className="text-2xl font-bold text-white flex items-center gap-2 justify-end md:justify-start">
-                  <MapPin size={20} className="text-teal-500" /> HYD-SEC-V
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-slate-900/40 border border-slate-800 p-8 rounded-[2rem] mb-8">
-              <div className="flex justify-between items-end mb-8">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Risk Analysis Engine</h3>
-                <Activity className="text-teal-500 animate-pulse" size={20} />
-              </div>
-              <div className="flex items-end gap-4 h-32">
-                {[2, 4, 3, 8, 5, policy.currentRainfall * 10, 2].map((val, i) => (
-                  <div key={i} className="flex-1 transition-all duration-700 rounded-t-lg bg-slate-800" 
-                       style={{ height: `${Math.min(val, 100)}%`, backgroundColor: val >= 50 ? '#f43f5e' : '#14b8a633' }} />
-                ))}
-              </div>
-              <div className="mt-6 flex justify-between text-[10px] font-black text-slate-600 uppercase">
-                <span>00:00</span><span>04:00</span><span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span><span>23:59</span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-4">
-              <button onClick={() => syncWeatherEngine(1.2)} className="px-8 py-4 bg-slate-800 hover:bg-slate-700 rounded-2xl text-xs font-bold transition-all">NORMAL WEATHER</button>
-              <button onClick={() => syncWeatherEngine(6.8)} className="px-8 py-4 bg-teal-500 text-slate-900 hover:bg-teal-400 rounded-2xl text-xs font-bold shadow-lg shadow-teal-500/20 transition-all">SIMULATE DISRUPTION (6.8mm)</button>
-            </div>
+      <main className="max-w-7xl mx-auto p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* LEFT COLUMN: LIVE METRICS */}
+        <div className="lg:col-span-8 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <MetricCard icon={<CloudRain />} label="Precipitation" value={`${riskData.metrics.rain}mm`} color="text-blue-400" />
+            <MetricCard icon={<Thermometer />} label="Heat Index" value={`${riskData.metrics.temp}°C`} color="text-orange-400" />
+            <MetricCard icon={<Wind />} label="Air Quality" value={`${riskData.metrics.aqi} AQI`} color="text-emerald-400" />
           </div>
 
-          <div className="lg:col-span-4 bg-slate-900/20 p-8 lg:p-12 space-y-8">
-            <div className="p-8 rounded-[2rem] border border-slate-800 bg-slate-900/40 relative overflow-hidden">
-              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-6 text-center">Wallet Status</h4>
-              <div className="text-center">
-                <div className="inline-flex items-baseline gap-1 text-5xl font-black text-white tracking-tighter mb-2">
-                  <IndianRupee size={28} className="text-teal-500" />
-                  {policy.payoutAmount.toLocaleString()}
-                </div>
-                <p className="text-xs text-slate-500">Pending Instant Payout</p>
+          <div className="bg-slate-900/40 border border-slate-800 p-8 rounded-[2.5rem] backdrop-blur-md">
+            <div className="flex justify-between items-start mb-12">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2 italic tracking-tight">Parametric Simulation Lab</h2>
+                <p className="text-sm text-slate-500 font-medium">Test multi-peril triggers for instant partner protection</p>
               </div>
-              {policy.triggerActive && (
-                <div className="mt-8 p-4 bg-teal-500/10 border border-teal-500/30 rounded-2xl flex items-center gap-3">
-                  <ShieldCheck size={20} className="text-teal-500" />
-                  <span className="text-[10px] font-bold text-teal-400">VERIFIED BY AI GUARD</span>
-                </div>
-              )}
+              <Activity className="text-cyan-500/50" />
             </div>
-
-            <div className={`p-8 rounded-[2rem] border transition-all duration-500 ${policy.triggerActive ? 'bg-rose-500 border-rose-400 shadow-2xl shadow-rose-500/20' : 'bg-slate-800 border-slate-700'}`}>
-              <div className="flex justify-between items-start mb-6">
-                <CloudRain size={32} className={policy.triggerActive ? 'text-white' : 'text-slate-600'} />
-                {loading && <RefreshCw size={16} className="animate-spin text-white" />}
-              </div>
-              <h5 className={`text-lg font-bold mb-2 ${policy.triggerActive ? 'text-white' : 'text-slate-400'}`}>
-                {policy.triggerActive ? 'DISRUPTION PAYOUT' : 'SAFE ZONE'}
-              </h5>
-              <p className={`text-[11px] leading-relaxed ${policy.triggerActive ? 'text-rose-100' : 'text-slate-500'}`}>
-                {policy.triggerActive ? 'Rainfall threshold exceeded. Claim processed without human intervention.' : 'Monitoring weather sensors. Your income is protected if rainfall exceeds 5mm/hr.'}
-              </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <TriggerBtn onClick={() => triggerEngine('RAIN')} icon={<CloudRain />} label="Heavy Rain (5mm+)" color="hover:bg-blue-500/20 hover:border-blue-500/50" />
+              <TriggerBtn onClick={() => triggerEngine('HEAT')} icon={<Thermometer />} label="Extreme Heat (45°C+)" color="hover:bg-orange-500/20 hover:border-orange-500/50" />
+              <TriggerBtn onClick={() => triggerEngine('AQI')} icon={<Wind />} label="Severe Pollution" color="hover:bg-emerald-500/20 hover:border-emerald-500/50" />
+              <TriggerBtn onClick={() => triggerEngine('RESET')} icon={<RefreshCw />} label="Reset Engine" color="hover:bg-slate-800" />
             </div>
           </div>
         </div>
-      </div>
+
+        {/* RIGHT COLUMN: WALLET & ENGINE STATUS */}
+        <div className="lg:col-span-4 space-y-8">
+          <div className="bg-gradient-to-br from-slate-900 to-[#020617] border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
+              <Wallet size={120} />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-6">Partner Wallet</p>
+            <div className="flex items-baseline gap-2 mb-2">
+              <span className="text-5xl font-black text-white italic tracking-tighter">DC {riskData.walletBalance.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold bg-cyan-400/10 w-fit px-3 py-1 rounded-lg">
+              <ArrowUpRight size={14} /> +DC {riskData.payoutAmount} Pending
+            </div>
+          </div>
+
+          <div className={`p-8 rounded-[2.5rem] border transition-all duration-700 ${riskData.activePeril !== "NONE" ? 'bg-rose-500/10 border-rose-500 shadow-[0_0_40px_rgba(244,63,94,0.2)]' : 'bg-slate-900/40 border-slate-800'}`}>
+            <div className="flex justify-between items-center mb-6">
+              <div className={`p-4 rounded-2xl ${riskData.activePeril !== "NONE" ? 'bg-rose-500 text-white animate-bounce' : 'bg-slate-800 text-slate-500'}`}>
+                {riskData.activePeril === "HEAT" ? <AlertTriangle /> : <Cpu />}
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Engine Logs</span>
+            </div>
+            <h3 className={`text-xl font-bold mb-3 ${riskData.activePeril !== "NONE" ? 'text-white' : 'text-slate-300'}`}>
+              {riskData.payoutStatus}
+            </h3>
+            <p className="text-xs leading-relaxed text-slate-500">
+              {riskData.activePeril !== "NONE" 
+                ? `Oracle confirmed ${riskData.activePeril} event. Smart contract executed. Payout of DC ${riskData.payoutAmount} initiated.` 
+                : "Awaiting sensor data from hyper-local nodes. All systems nominal."}
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
+
+// UI HELPER COMPONENTS
+const MetricCard = ({ icon, label, value, color }) => (
+  <div className="bg-slate-900/40 border border-slate-800/60 p-6 rounded-[2rem] hover:border-slate-700 transition-colors">
+    <div className={`mb-4 ${color}`}>{icon}</div>
+    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</p>
+    <p className="text-2xl font-bold text-white">{value}</p>
+  </div>
+);
+
+const TriggerBtn = ({ onClick, icon, label, color }) => (
+  <button onClick={onClick} className={`flex items-center gap-4 p-5 rounded-2xl border border-slate-800 bg-slate-900/40 text-left transition-all active:scale-95 group ${color}`}>
+    <div className="p-3 bg-slate-800 rounded-xl group-hover:scale-110 transition-transform">{icon}</div>
+    <span className="text-xs font-bold text-slate-400 group-hover:text-white uppercase tracking-wider">{label}</span>
+  </button>
+);
 
 export default App;
