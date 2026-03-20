@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* This is the magic line for v4 */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui;
+}
